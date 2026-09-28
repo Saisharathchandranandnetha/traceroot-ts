@@ -45,6 +45,8 @@ describe('wireInstrumentations() lazy loading', () => {
     const result = runScript(`
       const Module = require('node:module');
       const orig = Module._load;
+      let loaded = false;
+      let instrumented = false;
       Module._load = function(request, ...rest) {
         if (request === '@arizeai/openinference-instrumentation-openai')
           throw new Error('should not load openai instrumentation');
@@ -54,13 +56,15 @@ describe('wireInstrumentations() lazy loading', () => {
           throw new Error('should not load langchain instrumentation');
         if (request === '@arizeai/openinference-instrumentation-bedrock')
           throw new Error('should not load bedrock instrumentation');
-        if (request === '@arizeai/openinference-instrumentation-typesafe')
-          return { TypeSafeInstrumentation: class { manuallyInstrument() {} } };
+        if (request === '@arizeai/openinference-instrumentation-typesafe') {
+          loaded = true;
+          return { TypeSafeInstrumentation: class { manuallyInstrument() { instrumented = true; } } };
+        }
         return orig.apply(this, [request, ...rest]);
       };
       const { wireInstrumentations } = require('./src/instrumentation.ts');
       wireInstrumentations({ typeSafe: { name: 'mock' } });
-      console.log('OK');
+      console.log(loaded && instrumented ? 'OK' : 'NOT_WIRED');
     `);
     assert.equal(result.status, 0, result.stderr || result.stdout);
     assert.ok(result.stdout.includes('OK'));
