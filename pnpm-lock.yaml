@@ -4377,7 +4377,7 @@ snapshots:
 
   eventsource@3.0.7:
     dependencies:
-      eventsource-parser: 3.1.1
+      eventsource-parser: 3.0.6
 
   execa@9.6.1:
     dependencies:
